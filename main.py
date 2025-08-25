@@ -1,13 +1,23 @@
 from flask import Flask, request, jsonify, render_template_string
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
+import os
+import gdown
 
 app = Flask(__name__)
 
-# ---- Load model từ checkpoint ----
-model_path = "phobert_job_fraud"  # đổi lại đường dẫn của bạn
-tokenizer = AutoTokenizer.from_pretrained(model_path)
-model = AutoModelForSequenceClassification.from_pretrained(model_path)
+# ---- Google Drive folder link ----
+FOLDER_URL = "https://drive.google.com/drive/folders/1xfBJm-FNwi34W0ySzQIovtLxycUYGqd5?usp=drive_link"
+MODEL_DIR = "./phobert_job_fraud"
+
+# ---- Tải model từ Google Drive nếu chưa có ----
+if not os.path.exists(MODEL_DIR) or not os.listdir(MODEL_DIR):
+    print("📥 Downloading model from Google Drive...")
+    gdown.download_folder(FOLDER_URL, output=MODEL_DIR, quiet=False, use_cookies=False)
+
+# ---- Load model từ thư mục đã tải ----
+tokenizer = AutoTokenizer.from_pretrained(MODEL_DIR)
+model = AutoModelForSequenceClassification.from_pretrained(MODEL_DIR)
 
 # ---- Trang chủ: nhập text ----
 @app.route("/", methods=["GET"])
@@ -90,4 +100,4 @@ def predict():
     return jsonify(result)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
